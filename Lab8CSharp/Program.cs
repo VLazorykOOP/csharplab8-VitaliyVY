@@ -12,6 +12,8 @@ namespace MyProgram
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             bool exit = false;
 
+
+
             while (!exit)
             {
                 Console.WriteLine("\nОберіть опцію:");
@@ -40,7 +42,10 @@ namespace MyProgram
                         ProcessText();
                         break;
                     case 4:
-                        DisplayFileInfo();
+                        Console.WriteLine("Введіть прізвище студента:");
+                        string surname = Console.ReadLine();
+                        ProcessStudentData(surname);
+                        Console.WriteLine("Дії успішно завершено.");
                         break;
                     case 5:
                         exit = true;
@@ -70,9 +75,14 @@ namespace MyProgram
 
             Console.WriteLine();
 
+
             // Регулярний вираз для знаходження IP-адрес
+
+        // string ipPattern = @"(((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))\.){3}((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))";
+
+
             string ipPattern = @"\b(?:\d{1,3}\.){3}\d{1,3}\b";
-            (((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))\.){3}((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))
+           // (((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))\.){3}((\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5]))
 
             int ipCount = 0;
 
@@ -181,21 +191,111 @@ namespace MyProgram
 
             Console.WriteLine("Результат записано у файл 'result.txt'.");
         }
-        static void DisplayFileInfo()
+        static void ProcessStudentData(string surname)
         {
-            Console.WriteLine("Інформація про створені файли:");
+            string firstName1 = $"{surname}1";
+            string firstName2 = $"{surname}2";
 
-            string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
+            // Шлях до папки temp
+            string tempPath = @"D:\temp";
 
-            foreach (string file in files)
+            // Перевірка чи існує папка temp, якщо ні - створення
+            if (!Directory.Exists(tempPath))
             {
-                FileInfo fileInfo = new FileInfo(file);
-                Console.WriteLine($"Назва файлу: {fileInfo.Name}");
-                Console.WriteLine($"Розмір файлу: {fileInfo.Length} байт");
-                Console.WriteLine($"Дата створення: {fileInfo.CreationTime}");
-                Console.WriteLine($"Дата останньої модифікації: {fileInfo.LastWriteTime}");
-                Console.WriteLine();
+                Directory.CreateDirectory(tempPath);
+            }
+
+            // Папка прізвище_студента1
+            string folderPath1 = Path.Combine(tempPath, firstName1);
+            Directory.CreateDirectory(folderPath1);
+
+            // Файл t1.txt зі змістом
+            string filePath1 = Path.Combine(folderPath1, "t1.txt");
+            using (StreamWriter writer = File.CreateText(filePath1))
+            {
+                writer.WriteLine("<Шевченко Степан Іванович, 2001> року народження, місце проживання <м. Суми>");
+            }
+
+            Console.WriteLine($"Створено файл: {filePath1}");
+
+            // Папка прізвище_студента2
+            string folderPath2 = Path.Combine(tempPath, firstName2);
+            Directory.CreateDirectory(folderPath2);
+
+            // Файл t2.txt зі змістом
+            string filePath2 = Path.Combine(folderPath2, "t2.txt");
+            using (StreamWriter writer = File.CreateText(filePath2))
+            {
+                writer.WriteLine("<Комар Сергій Федорович, 2000 > року народження, місце проживання <м. Київ>");
+            }
+
+            Console.WriteLine($"Створено файл: {filePath2}");
+
+            // Створення файлу t3.txt у папці прізвище_студента2
+            string filePath3 = Path.Combine(folderPath2, "t3.txt");
+            string t1Content = File.ReadAllText(filePath1);
+            string t2Content = File.ReadAllText(filePath2);
+            using (StreamWriter writer = File.CreateText(filePath3))
+            {
+                writer.WriteLine(t1Content);
+                writer.WriteLine(t2Content);
+            }
+
+            Console.WriteLine($"Створено файл: {filePath3}");
+
+            // Перенесення файлу t2.txt у папку прізвище_студента2
+            string destinationFilePath2 = Path.Combine(folderPath2, "t2.txt");
+            File.Move(filePath2, destinationFilePath2);
+
+            Console.WriteLine($"Переміщено файл: {destinationFilePath2}");
+
+            // Копіювання файлу t1.txt у папку прізвище_студента2
+            string destinationFilePath1 = Path.Combine(folderPath2, "t1.txt");
+            File.Copy(filePath1, destinationFilePath1);
+
+            Console.WriteLine($"Скопійовано файл: {destinationFilePath1}");
+
+            // Перевірка чи існує папка <прізвище_студента>2, перш ніж перейменовувати
+            if (Directory.Exists(folderPath2))
+            {
+                // Перейменування папки <прізвище_студента>2 у ALL
+                string allPath = Path.Combine(tempPath, "ALL");
+                Directory.Move(folderPath2, allPath);
+                Console.WriteLine($"Перейменовано папку: {folderPath2} -> {allPath}");
+            }
+            else
+            {
+                Console.WriteLine($"Папки {folderPath2} не існує.");
+            }
+
+
+            // Вилучення папки прізвище_студента1
+            Directory.Delete(folderPath1, true);
+            Console.WriteLine($"Вилучено папку: {folderPath1}");
+
+            // Виведення повної інформації про файли у папці ALL, якщо вона існує
+            string allPathInfo = Path.Combine(tempPath, "ALL");
+            if (Directory.Exists(allPathInfo))
+            {
+                Console.WriteLine("Повна інформація про файли у папці ALL:");
+                string[] allFiles = Directory.GetFiles(allPathInfo);
+                foreach (string file in allFiles)
+                {
+                    FileInfo fileInfo = new FileInfo(file);
+                    Console.WriteLine($"Шлях: {fileInfo.FullName}");
+                    Console.WriteLine($"Розмір: {fileInfo.Length} байт");
+                    Console.WriteLine($"Дата створення: {fileInfo.CreationTime}");
+                    Console.WriteLine($"Дата останньої зміни: {fileInfo.LastWriteTime}");
+                    Console.WriteLine();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Папки {allPathInfo} не існує.");
             }
         }
     }
 }
+
+
+
